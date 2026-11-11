@@ -1,0 +1,472 @@
+<!--
+  Settings window content. Loaded at runtime with XamlReader (no XAML compiler needed),
+  so there is no x:Class and no event handlers here: SettingsWindow.cs finds the named
+  elements and wires them up. Colors are DynamicResources set from code for light/dark.
+-->
+<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      x:Name="Root">
+  <Grid.Resources>
+
+    <!-- Text -->
+    <Style x:Key="PageTitle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="26"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="Margin" Value="2,0,0,22"/>
+    </Style>
+    <Style x:Key="SectionTitle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="Margin" Value="2,0,0,8"/>
+    </Style>
+    <Style x:Key="RowTitle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+    </Style>
+    <Style x:Key="RowText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource SubText}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,2,0,0"/>
+    </Style>
+
+    <!-- Layout -->
+    <Style x:Key="CardStyle" TargetType="Border">
+      <Setter Property="Background" Value="{DynamicResource Card}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Margin" Value="0,0,0,26"/>
+    </Style>
+    <Style x:Key="DividerStyle" TargetType="Border">
+      <Setter Property="Height" Value="1"/>
+      <Setter Property="Background" Value="{DynamicResource CardBorder}"/>
+    </Style>
+    <Style x:Key="Row" TargetType="Grid">
+      <Setter Property="Margin" Value="18,14,16,14"/>
+      <Setter Property="MinHeight" Value="36"/>
+    </Style>
+
+    <!-- Plain button -->
+    <Style x:Key="Button" TargetType="Button">
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Box" Background="{DynamicResource ControlBg}" BorderBrush="{DynamicResource ControlBorder}"
+                    BorderThickness="1" CornerRadius="5" Padding="14,6,14,7" MinWidth="88">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlHover}"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlPressed}"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource SubText}"/>
+              </Trigger>
+              <!-- Tag="Recording" while waiting for a new shortcut -->
+              <Trigger Property="Tag" Value="Recording">
+                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Text}"/>
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlHover}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Toggle switch -->
+    <Style x:Key="Toggle" TargetType="CheckBox">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="CheckBox">
+            <Grid Width="40" Height="20" Background="Transparent">
+              <Border x:Name="Off" CornerRadius="10" BorderThickness="1"
+                      BorderBrush="{DynamicResource ToggleOffBorder}" Background="{DynamicResource ToggleOffBg}"/>
+              <Border x:Name="On" CornerRadius="10" Background="{DynamicResource Accent}" Opacity="0"/>
+              <Grid x:Name="Knob" Width="12" Height="12" HorizontalAlignment="Left" Margin="4,0,0,0"
+                    RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform>
+                  <TransformGroup>
+                    <ScaleTransform x:Name="KnobScale"/>
+                    <TranslateTransform x:Name="KnobShift"/>
+                  </TransformGroup>
+                </Grid.RenderTransform>
+                <Ellipse x:Name="KnobOff" Fill="{DynamicResource ToggleOffBorder}"/>
+                <Ellipse x:Name="KnobOn" Fill="{DynamicResource AccentText}" Opacity="0"/>
+              </Grid>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True">
+                <Trigger.EnterActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="KnobShift" Storyboard.TargetProperty="X" To="20" Duration="0:0:0.2">
+                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                      </DoubleAnimation>
+                      <DoubleAnimation Storyboard.TargetName="On" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"/>
+                      <DoubleAnimation Storyboard.TargetName="KnobOn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"/>
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="KnobShift" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.2">
+                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                      </DoubleAnimation>
+                      <DoubleAnimation Storyboard.TargetName="On" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.16"/>
+                      <DoubleAnimation Storyboard.TargetName="KnobOn" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.16"/>
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.ExitActions>
+              </Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="KnobScale" Storyboard.TargetProperty="ScaleX" To="1.17" Duration="0:0:0.12"/>
+                      <DoubleAnimation Storyboard.TargetName="KnobScale" Storyboard.TargetProperty="ScaleY" To="1.17" Duration="0:0:0.12"/>
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="KnobScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.12"/>
+                      <DoubleAnimation Storyboard.TargetName="KnobScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.12"/>
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.ExitActions>
+                <Setter TargetName="Off" Property="Background" Value="{DynamicResource ToggleOffHover}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Segmented choice -->
+    <Style x:Key="Segment" TargetType="RadioButton">
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="Box" Background="Transparent" CornerRadius="4" Padding="16,5,16,6">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlHover}"/>
+              </Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource Accent}"/>
+                <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Text box -->
+    <Style x:Key="Input" TargetType="TextBox">
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="CaretBrush" Value="{DynamicResource Text}"/>
+      <Setter Property="SelectionBrush" Value="{DynamicResource SubText}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="TextBox">
+            <Border x:Name="Box" Background="{DynamicResource ControlBg}" BorderBrush="{DynamicResource ControlBorder}"
+                    BorderThickness="1" CornerRadius="5" Padding="8,5,8,6">
+              <ScrollViewer x:Name="PART_ContentHost" Focusable="False" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlHover}"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource SubText}"/>
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlBg}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Slider -->
+    <Style x:Key="TrackFillStyle" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="IsTabStop" Value="False"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RepeatButton">
+            <Border Background="Transparent">
+              <Border Height="4" CornerRadius="2" Background="{DynamicResource Accent}"/>
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="TrackRestStyle" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="IsTabStop" Value="False"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RepeatButton">
+            <Border Background="Transparent">
+              <Border Height="4" CornerRadius="2" Background="{DynamicResource TrackRest}"/>
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="SliderKnob" TargetType="Thumb">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Thumb">
+            <Grid Width="20" Height="20">
+              <Ellipse Fill="{DynamicResource Card}" Stroke="{DynamicResource ControlBorder}" StrokeThickness="1"/>
+              <Ellipse x:Name="Dot" Width="10" Height="10" Fill="{DynamicResource Accent}"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Dot" Property="Width" Value="12"/>
+                <Setter TargetName="Dot" Property="Height" Value="12"/>
+              </Trigger>
+              <Trigger Property="IsDragging" Value="True">
+                <Setter TargetName="Dot" Property="Width" Value="8"/>
+                <Setter TargetName="Dot" Property="Height" Value="8"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="Slider" TargetType="Slider">
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+      <Setter Property="IsMoveToPointEnabled" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Slider">
+            <Grid Height="24" Background="Transparent">
+              <Track x:Name="PART_Track">
+                <Track.DecreaseRepeatButton>
+                  <RepeatButton Style="{StaticResource TrackFillStyle}" Command="{x:Static Slider.DecreaseLarge}"/>
+                </Track.DecreaseRepeatButton>
+                <Track.IncreaseRepeatButton>
+                  <RepeatButton Style="{StaticResource TrackRestStyle}" Command="{x:Static Slider.IncreaseLarge}"/>
+                </Track.IncreaseRepeatButton>
+                <Track.Thumb>
+                  <Thumb Style="{StaticResource SliderKnob}"/>
+                </Track.Thumb>
+              </Track>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Slim scroll bar -->
+    <Style TargetType="ScrollBar">
+      <Setter Property="Width" Value="12"/>
+      <Setter Property="MinWidth" Value="12"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ScrollBar">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
+              <Track.Thumb>
+                <Thumb>
+                  <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                      <Border Width="4" CornerRadius="2" Background="{DynamicResource ScrollThumb}" HorizontalAlignment="Center"/>
+                    </ControlTemplate>
+                  </Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+            </Track>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Grid.Resources>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+    <StackPanel x:Name="Page" Margin="30,22,26,24" MaxWidth="680">
+      <StackPanel.RenderTransform>
+        <TranslateTransform x:Name="PageShift"/>
+      </StackPanel.RenderTransform>
+
+      <TextBlock Style="{StaticResource PageTitle}" Text="Settings"/>
+
+      <!-- Capture -->
+      <TextBlock Style="{StaticResource SectionTitle}" Text="Capture"/>
+      <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Keyboard shortcut"/>
+              <TextBlock x:Name="HotkeyNote" Style="{StaticResource RowText}" Text="Combination that starts a capture"/>
+            </StackPanel>
+            <Button x:Name="HotkeyButton" Grid.Column="1" Style="{StaticResource Button}" VerticalAlignment="Center" MinWidth="150">
+              <TextBlock x:Name="HotkeyText" Text="Impr Pant"/>
+            </Button>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Enter and double-click"/>
+              <TextBlock Style="{StaticResource RowText}" Text="What to do when you confirm without the toolbar. For both, choose Save and turn on “Also copy when saving”."/>
+            </StackPanel>
+            <Border Grid.Column="1" VerticalAlignment="Center" Background="{DynamicResource ControlBg}" BorderBrush="{DynamicResource ControlBorder}"
+                    BorderThickness="1" CornerRadius="6" Padding="2">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="ActionCopy" GroupName="Action" Style="{StaticResource Segment}" Content="Copy"/>
+                <RadioButton x:Name="ActionSave" GroupName="Action" Style="{StaticResource Segment}" Content="Save"/>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Saving -->
+      <TextBlock Style="{StaticResource SectionTitle}" Text="Saving"/>
+      <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Folder"/>
+              <TextBlock x:Name="FolderText" Style="{StaticResource RowText}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+            <Button x:Name="FolderButton" Grid.Column="1" Style="{StaticResource Button}" VerticalAlignment="Center" Content="Change…"/>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Save without asking"/>
+              <TextBlock Style="{StaticResource RowText}" Text="Saves straight to the folder, without opening the dialog"/>
+            </StackPanel>
+            <CheckBox x:Name="QuickSave" Grid.Column="1" Style="{StaticResource Toggle}"/>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="File name"/>
+              <TextBlock Style="{StaticResource RowText}" Text="You can use {date}, {time} and {n} (a running number)"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Width="230">
+              <TextBox x:Name="NamePattern" Style="{StaticResource Input}"/>
+              <TextBlock x:Name="NamePreview" Style="{StaticResource RowText}" Margin="2,5,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Also copy when saving"/>
+              <TextBlock Style="{StaticResource RowText}" Text="Besides the file, puts the image on the clipboard"/>
+            </StackPanel>
+            <CheckBox x:Name="CopyOnSave" Grid.Column="1" Style="{StaticResource Toggle}"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Appearance -->
+      <TextBlock Style="{StaticResource SectionTitle}" Text="Appearance"/>
+      <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Rounded corners"/>
+              <TextBlock Style="{StaticResource RowText}" Text="Rounds the selection and the final image, with transparent corners"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+              <Slider x:Name="RadiusSlider" Style="{StaticResource Slider}" Width="180" Minimum="0" Maximum="24"
+                      SmallChange="1" LargeChange="4" VerticalAlignment="Center"/>
+              <TextBlock x:Name="RadiusValue" Width="52" TextAlignment="Right" FontSize="13" VerticalAlignment="Center"
+                         Foreground="{DynamicResource SubText}"/>
+            </StackPanel>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Dimming"/>
+              <TextBlock Style="{StaticResource RowText}" Text="How dark the screen gets while you select"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+              <Slider x:Name="DimSlider" Style="{StaticResource Slider}" Width="180" Minimum="0" Maximum="85"
+                      SmallChange="1" LargeChange="10" VerticalAlignment="Center"/>
+              <TextBlock x:Name="DimValue" Width="52" TextAlignment="Right" FontSize="13" VerticalAlignment="Center"
+                         Foreground="{DynamicResource SubText}"/>
+            </StackPanel>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Show hint"/>
+              <TextBlock Style="{StaticResource RowText}" Text="A short hint at the bottom of the screen when a capture starts"/>
+            </StackPanel>
+            <CheckBox x:Name="ShowHint" Grid.Column="1" Style="{StaticResource Toggle}"/>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Show notifications"/>
+              <TextBlock Style="{StaticResource RowText}" Text="A notice with a thumbnail after copying or saving"/>
+            </StackPanel>
+            <CheckBox x:Name="ShowToasts" Grid.Column="1" Style="{StaticResource Toggle}"/>
+          </Grid>
+          <Border Style="{StaticResource DividerStyle}"/>
+          <Grid Style="{StaticResource Row}">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Style="{StaticResource RowTitle}" Text="Capture sound"/>
+              <TextBlock Style="{StaticResource RowText}" Text="A soft shutter sound when copying or saving"/>
+            </StackPanel>
+            <CheckBox x:Name="PlaySound" Grid.Column="1" Style="{StaticResource Toggle}"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- General -->
+      <TextBlock Style="{StaticResource SectionTitle}" Text="General"/>
+      <Border Style="{StaticResource CardStyle}">
+        <Grid Style="{StaticResource Row}">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+            <TextBlock Style="{StaticResource RowTitle}" Text="Start with Windows"/>
+            <TextBlock Style="{StaticResource RowText}" Text="Waits in the system tray as soon as the PC starts"/>
+          </StackPanel>
+          <CheckBox x:Name="AutoStart" Grid.Column="1" Style="{StaticResource Toggle}"/>
+        </Grid>
+      </Border>
+
+      <TextBlock x:Name="Footer" Style="{StaticResource RowText}" Margin="2,-8,0,0"/>
+    </StackPanel>
+  </ScrollViewer>
+</Grid>
